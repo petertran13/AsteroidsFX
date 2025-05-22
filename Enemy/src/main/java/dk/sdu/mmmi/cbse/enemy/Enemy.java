@@ -20,14 +20,23 @@ public class Enemy extends Entity {
     public void handleCollision(GameData gameData, World world, Entity other) {
         String otherType = other.getType();
 
-        if ("ASTEROID".equals(otherType) || "PLAYER".equals(otherType)) {
+        if ("PLAYER".equals(otherType)) {
+            // Remove both enemy and player immediately
             world.removeEntity(this);
+            world.removeEntity(other);
+        }
+
+        if ("ASTEROID".equals(otherType)) {
+            // Your existing logic for asteroid collisions
+            decreaseHealth(1);
+            if (health <= 0) {
+                world.removeEntity(this);
+            }
         }
 
         if ("PLAYER_BULLET".equals(otherType)) {
             decreaseHealth(1);
             world.removeEntity(other);
-
             if (health <= 0) {
                 world.removeEntity(this);
             }

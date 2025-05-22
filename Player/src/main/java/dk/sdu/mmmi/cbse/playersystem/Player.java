@@ -20,19 +20,25 @@ public class Player extends Entity {
     public void handleCollision(GameData gameData, World world, Entity other) {
         String otherType = other.getType();
 
-        if ("ASTEROID".equals(otherType) || "ENEMY".equals(otherType)) {
+        if ("ENEMY".equals(otherType)) {
+            // Remove both player and enemy immediately
             world.removeEntity(this);
+            world.removeEntity(other);
+        }
+
+        if ("ASTEROID".equals(otherType)) {
+            decreaseHealth(1);
+            if (health <= 0) {
+                world.removeEntity(this);
+            }
         }
 
         if ("ENEMY_BULLET".equals(otherType)) {
             decreaseHealth(1);
             world.removeEntity(other);
-
             if (health <= 0) {
                 world.removeEntity(this);
             }
         }
     }
 }
-
-
