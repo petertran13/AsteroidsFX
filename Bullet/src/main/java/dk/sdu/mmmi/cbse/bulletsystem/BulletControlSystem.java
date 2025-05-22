@@ -9,27 +9,46 @@ import dk.sdu.mmmi.cbse.common.services.IEntityProcessingService;
 
 public class BulletControlSystem implements IEntityProcessingService, BulletSPI {
 
+    private static final double BULLET_SPEED = 4.0;
+    private static final double SPAWN_DISTANCE = 10.0;
+
     @Override
     public void process(GameData gameData, World world) {
-
-        for (Entity bullet : world.getEntities(Bullet.class)) {
-            double changeX = Math.cos(Math.toRadians(bullet.getRotation()));
-            double changeY = Math.sin(Math.toRadians(bullet.getRotation()));
-            bullet.setX(bullet.getX() + changeX * 3);
-            bullet.setY(bullet.getY() + changeY * 3);
+        for (Entity entity : world.getEntities(Bullet.class)) {
+            moveBullet(entity);
         }
+    }
+
+    private void moveBullet(Entity bullet) {
+        double angleRadians = Math.toRadians(bullet.getRotation());
+        double deltaX = Math.cos(angleRadians) * BULLET_SPEED;
+        double deltaY = Math.sin(angleRadians) * BULLET_SPEED;
+
+        bullet.setX(bullet.getX() + deltaX);
+        bullet.setY(bullet.getY() + deltaY);
     }
 
     @Override
     public Entity createBullet(Entity shooter, GameData gameData) {
-        Entity bullet = new Bullet();
-        bullet.setPolygonCoordinates(1, -1, 1, 1, -1, 1, -1, -1);
-        double changeX = Math.cos(Math.toRadians(shooter.getRotation()));
-        double changeY = Math.sin(Math.toRadians(shooter.getRotation()));
-        bullet.setX(shooter.getX() + changeX * 10);
-        bullet.setY(shooter.getY() + changeY * 10);
+        Bullet bullet = new Bullet();
+        bullet.setPolygonCoordinates(-3, -3, 3, -3, 3, -1, 1, -1, 1, 1, 3, 1, 3, 3, -3, 3);
+
+        double angleRadians = Math.toRadians(shooter.getRotation());
+        double offsetX = Math.cos(angleRadians) * SPAWN_DISTANCE;
+        double offsetY = Math.sin(angleRadians) * SPAWN_DISTANCE;
+
+        bullet.setX(shooter.getX() + offsetX);
+        bullet.setY(shooter.getY() + offsetY);
         bullet.setRotation(shooter.getRotation());
-        bullet.setRadius(1);
+        bullet.setRadius(2.0f);
+        bullet.setColor("RED");
+
+        if (shooter.getClass().getSimpleName().equals("Player")) {
+            bullet.setType("PLAYER_BULLET");
+        } else {
+            bullet.setType("ENEMY_BULLET");
+        }
+
         return bullet;
     }
 }

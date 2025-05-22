@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package dk.sdu.mmmi.cbse.main;
 
 import dk.sdu.mmmi.cbse.common.data.Entity;
@@ -11,39 +7,37 @@ import dk.sdu.mmmi.cbse.common.data.World;
 import dk.sdu.mmmi.cbse.common.services.IEntityProcessingService;
 import dk.sdu.mmmi.cbse.common.services.IGamePluginService;
 import dk.sdu.mmmi.cbse.common.services.IPostEntityProcessingService;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
+import static java.util.stream.Collectors.toList;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-/**
- *
- * @author jcs
- */
-class Game {
+public class Game extends Application {
 
     private final GameData gameData = new GameData();
     private final World world = new World();
     private final Map<Entity, Polygon> polygons = new ConcurrentHashMap<>();
     private final Pane gameWindow = new Pane();
-    private final List<IGamePluginService> gamePluginServices;
-    private final List<IEntityProcessingService> entityProcessingServiceList;
-    private final List<IPostEntityProcessingService> postEntityProcessingServices;
 
-    Game(List<IGamePluginService> gamePluginServices, List<IEntityProcessingService> entityProcessingServiceList, List<IPostEntityProcessingService> postEntityProcessingServices) {
-        this.gamePluginServices = gamePluginServices;
-        this.entityProcessingServiceList = entityProcessingServiceList;
-        this.postEntityProcessingServices = postEntityProcessingServices;
+    public Game(List<IGamePluginService> iGamePluginServices, List<IEntityProcessingService> iEntityProcessingServices, List<IPostEntityProcessingService> iPostEntityProcessingServices) {
     }
 
+    public static void main(String[] args) {
+        launch(Main.class);
+    }
+
+    @Override
     public void start(Stage window) throws Exception {
         Text text = new Text(10, 20, "Destroyed asteroids: 0");
         gameWindow.setPrefSize(gameData.getDisplayWidth(), gameData.getDisplayHeight());
@@ -60,8 +54,14 @@ class Game {
             if (event.getCode().equals(KeyCode.UP)) {
                 gameData.getKeys().setKey(GameKeys.UP, true);
             }
+            if (event.getCode().equals(KeyCode.DOWN)) {
+                gameData.getKeys().setKey(GameKeys.DOWN, true);
+            }
             if (event.getCode().equals(KeyCode.SPACE)) {
                 gameData.getKeys().setKey(GameKeys.SPACE, true);
+            }
+            if (event.getCode().equals(KeyCode.X)) {
+                gameData.getKeys().setKey(GameKeys.X, true);
             }
         });
         scene.setOnKeyReleased(event -> {
@@ -74,14 +74,19 @@ class Game {
             if (event.getCode().equals(KeyCode.UP)) {
                 gameData.getKeys().setKey(GameKeys.UP, false);
             }
+            if (event.getCode().equals(KeyCode.DOWN)) {
+                gameData.getKeys().setKey(GameKeys.DOWN, false);
+            }
             if (event.getCode().equals(KeyCode.SPACE)) {
                 gameData.getKeys().setKey(GameKeys.SPACE, false);
+            }
+            if (event.getCode().equals(KeyCode.X)) {
+                gameData.getKeys().setKey(GameKeys.X, false);
             }
 
         });
 
-        // Lookup all Game Plugins using ServiceLoader
-        for (IGamePluginService iGamePlugin : getGamePluginServices()) {
+        for (IGamePluginService iGamePlugin : getPluginServices()) {
             iGamePlugin.start(gameData, world);
         }
         for (Entity entity : world.getEntities()) {
@@ -89,18 +94,21 @@ class Game {
             polygons.put(entity, polygon);
             gameWindow.getChildren().add(polygon);
         }
+        render();
         window.setScene(scene);
-        window.setTitle("ASTEROIDS");
+        window.setTitle("ASTEROID");
         window.show();
     }
 
-    public void render() {
+    void render() {
         new AnimationTimer() {
             @Override
             public void handle(long now) {
                 update();
                 draw();
                 gameData.getKeys().update();
+
+//            }
             }
 
         }.start();
@@ -117,7 +125,7 @@ class Game {
 
     private void draw() {
         for (Entity polygonEntity : polygons.keySet()) {
-            if (!world.getEntities().contains(polygonEntity)) {
+            if(!world.getEntities().contains(polygonEntity)){
                 Polygon removedPolygon = polygons.get(polygonEntity);
                 polygons.remove(polygonEntity);
                 gameWindow.getChildren().remove(removedPolygon);
@@ -134,20 +142,24 @@ class Game {
             polygon.setTranslateX(entity.getX());
             polygon.setTranslateY(entity.getY());
             polygon.setRotate(entity.getRotation());
+
+            if (entity.getColor() == null) {
+                entity.setColor("BLACK");
+            }
+            polygon.setFill(Color.valueOf(entity.getColor()));
         }
 
     }
 
-    public List<IGamePluginService> getGamePluginServices() {
-        return gamePluginServices;
+    private Collection<? extends IGamePluginService> getPluginServices() {
+        return ServiceLoader.load(IGamePluginService.class).stream().map(ServiceLoader.Provider::get).collect(toList());
     }
 
-    public List<IEntityProcessingService> getEntityProcessingServices() {
-        return entityProcessingServiceList;
+    private Collection<? extends IEntityProcessingService> getEntityProcessingServices() {
+        return ServiceLoader.load(IEntityProcessingService.class).stream().map(ServiceLoader.Provider::get).collect(toList());
     }
 
-    public List<IPostEntityProcessingService> getPostEntityProcessingServices() {
-        return postEntityProcessingServices;
+    private Collection<? extends IPostEntityProcessingService> getPostEntityProcessingServices() {
+        return ServiceLoader.load(IPostEntityProcessingService.class).stream().map(ServiceLoader.Provider::get).collect(toList());
     }
-
 }
