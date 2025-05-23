@@ -3,6 +3,7 @@ package dk.sdu.mmmi.cbse.common.asteroids;
 import dk.sdu.mmmi.cbse.common.data.Entity;
 import dk.sdu.mmmi.cbse.common.data.GameData;
 import dk.sdu.mmmi.cbse.common.data.World;
+import dk.sdu.mmmi.cbse.main.ScoreClient;
 
 public class Asteroid extends Entity {
 
@@ -29,10 +30,11 @@ public class Asteroid extends Entity {
     public void handleCollision(GameData gameData, World world, Entity other) {
         String otherType = other.getType();
 
-        if ("PLAYER_BULLET".equals(otherType) || "ENEMY_BULLET".equals(otherType)) {
+        if ("PLAYER_BULLET".equals(otherType)) {
             world.removeEntity(other);
 
             if (size > 1) {
+                // Split into two smaller asteroids
                 for (int i = 0; i < 2; i++) {
                     Asteroid smaller = new Asteroid(size - 1);
                     smaller.setX(this.getX() + (i == 0 ? -15 : 15));
@@ -54,8 +56,19 @@ public class Asteroid extends Entity {
 
                     world.addEntity(smaller);
                 }
-            }
+                world.removeEntity(this);
+            } else {
+                // Smallest asteroid destroyed: remove it and send points
+                world.removeEntity(this);
 
+                ScoreClient scoreClient = new ScoreClient();
+                scoreClient.sendPoints(50);
+            }
+        }
+
+        else if ("ENEMY_BULLET".equals(otherType)) {
+            // You can add handling for enemy bullets here if needed
+            world.removeEntity(other);
             world.removeEntity(this);
         }
     }
