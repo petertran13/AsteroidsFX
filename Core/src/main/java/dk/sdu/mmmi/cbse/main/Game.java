@@ -7,12 +7,6 @@ import dk.sdu.mmmi.cbse.common.data.World;
 import dk.sdu.mmmi.cbse.common.services.IEntityProcessingService;
 import dk.sdu.mmmi.cbse.common.services.IGamePluginService;
 import dk.sdu.mmmi.cbse.common.services.IPostEntityProcessingService;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.ServiceLoader;
-import java.util.concurrent.ConcurrentHashMap;
-import static java.util.stream.Collectors.toList;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -23,77 +17,64 @@ import javafx.scene.shape.Polygon;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.ServiceLoader;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static java.util.stream.Collectors.toList;
+
 public class Game extends Application {
 
     private final GameData gameData = new GameData();
     private final World world = new World();
     private final Map<Entity, Polygon> polygons = new ConcurrentHashMap<>();
     private final Pane gameWindow = new Pane();
+    private final Text scoreText = new Text(10, 20, "Score: 0");
+    private long lastScore = 0;
 
-    public Game(List<IGamePluginService> iGamePluginServices, List<IEntityProcessingService> iEntityProcessingServices, List<IPostEntityProcessingService> iPostEntityProcessingServices) {
-    }
+    public Game(List<IGamePluginService> igps, List<IEntityProcessingService> ieps, List<IPostEntityProcessingService> ipps) {}
 
     public static void main(String[] args) {
         launch(Main.class);
     }
 
     @Override
-    public void start(Stage window) throws Exception {
-        Text text = new Text(10, 20, "Destroyed asteroids: 0");
+    public void start(Stage window) {
         gameWindow.setPrefSize(gameData.getDisplayWidth(), gameData.getDisplayHeight());
-        gameWindow.getChildren().add(text);
+        gameWindow.getChildren().add(scoreText);
 
         Scene scene = new Scene(gameWindow);
         scene.setOnKeyPressed(event -> {
-            if (event.getCode().equals(KeyCode.LEFT)) {
-                gameData.getKeys().setKey(GameKeys.LEFT, true);
-            }
-            if (event.getCode().equals(KeyCode.RIGHT)) {
-                gameData.getKeys().setKey(GameKeys.RIGHT, true);
-            }
-            if (event.getCode().equals(KeyCode.UP)) {
-                gameData.getKeys().setKey(GameKeys.UP, true);
-            }
-            if (event.getCode().equals(KeyCode.DOWN)) {
-                gameData.getKeys().setKey(GameKeys.DOWN, true);
-            }
-            if (event.getCode().equals(KeyCode.SPACE)) {
-                gameData.getKeys().setKey(GameKeys.SPACE, true);
-            }
-            if (event.getCode().equals(KeyCode.X)) {
-                gameData.getKeys().setKey(GameKeys.X, true);
-            }
+            KeyCode code = event.getCode();
+            if (code == KeyCode.LEFT) gameData.getKeys().setKey(GameKeys.LEFT, true);
+            if (code == KeyCode.RIGHT) gameData.getKeys().setKey(GameKeys.RIGHT, true);
+            if (code == KeyCode.UP) gameData.getKeys().setKey(GameKeys.UP, true);
+            if (code == KeyCode.DOWN) gameData.getKeys().setKey(GameKeys.DOWN, true);
+            if (code == KeyCode.SPACE) gameData.getKeys().setKey(GameKeys.SPACE, true);
+            if (code == KeyCode.X) gameData.getKeys().setKey(GameKeys.X, true);
         });
         scene.setOnKeyReleased(event -> {
-            if (event.getCode().equals(KeyCode.LEFT)) {
-                gameData.getKeys().setKey(GameKeys.LEFT, false);
-            }
-            if (event.getCode().equals(KeyCode.RIGHT)) {
-                gameData.getKeys().setKey(GameKeys.RIGHT, false);
-            }
-            if (event.getCode().equals(KeyCode.UP)) {
-                gameData.getKeys().setKey(GameKeys.UP, false);
-            }
-            if (event.getCode().equals(KeyCode.DOWN)) {
-                gameData.getKeys().setKey(GameKeys.DOWN, false);
-            }
-            if (event.getCode().equals(KeyCode.SPACE)) {
-                gameData.getKeys().setKey(GameKeys.SPACE, false);
-            }
-            if (event.getCode().equals(KeyCode.X)) {
-                gameData.getKeys().setKey(GameKeys.X, false);
-            }
-
+            KeyCode code = event.getCode();
+            if (code == KeyCode.LEFT) gameData.getKeys().setKey(GameKeys.LEFT, false);
+            if (code == KeyCode.RIGHT) gameData.getKeys().setKey(GameKeys.RIGHT, false);
+            if (code == KeyCode.UP) gameData.getKeys().setKey(GameKeys.UP, false);
+            if (code == KeyCode.DOWN) gameData.getKeys().setKey(GameKeys.DOWN, false);
+            if (code == KeyCode.SPACE) gameData.getKeys().setKey(GameKeys.SPACE, false);
+            if (code == KeyCode.X) gameData.getKeys().setKey(GameKeys.X, false);
         });
 
-        for (IGamePluginService iGamePlugin : getPluginServices()) {
-            iGamePlugin.start(gameData, world);
+        for (IGamePluginService plugin : getPluginServices()) {
+            plugin.start(gameData, world);
         }
+
         for (Entity entity : world.getEntities()) {
             Polygon polygon = new Polygon(entity.getPolygonCoordinates());
             polygons.put(entity, polygon);
             gameWindow.getChildren().add(polygon);
         }
+
         render();
         window.setScene(scene);
         window.setTitle("ASTEROID");
@@ -107,48 +88,49 @@ public class Game extends Application {
                 update();
                 draw();
                 gameData.getKeys().update();
-
-//            }
+                checkScoreUpdate();
             }
-
         }.start();
     }
 
     private void update() {
-        for (IEntityProcessingService entityProcessorService : getEntityProcessingServices()) {
-            entityProcessorService.process(gameData, world);
+        for (IEntityProcessingService eps : getEntityProcessingServices()) {
+            eps.process(gameData, world);
         }
-        for (IPostEntityProcessingService postEntityProcessorService : getPostEntityProcessingServices()) {
-            postEntityProcessorService.process(gameData, world);
+        for (IPostEntityProcessingService peps : getPostEntityProcessingServices()) {
+            peps.process(gameData, world);
         }
     }
 
     private void draw() {
-        for (Entity polygonEntity : polygons.keySet()) {
-            if(!world.getEntities().contains(polygonEntity)){
-                Polygon removedPolygon = polygons.get(polygonEntity);
-                polygons.remove(polygonEntity);
-                gameWindow.getChildren().remove(removedPolygon);
+        for (Entity e : polygons.keySet()) {
+            if (!world.getEntities().contains(e)) {
+                gameWindow.getChildren().remove(polygons.get(e));
+                polygons.remove(e);
             }
         }
 
-        for (Entity entity : world.getEntities()) {
-            Polygon polygon = polygons.get(entity);
-            if (polygon == null) {
-                polygon = new Polygon(entity.getPolygonCoordinates());
-                polygons.put(entity, polygon);
-                gameWindow.getChildren().add(polygon);
+        for (Entity e : world.getEntities()) {
+            Polygon poly = polygons.get(e);
+            if (poly == null) {
+                poly = new Polygon(e.getPolygonCoordinates());
+                polygons.put(e, poly);
+                gameWindow.getChildren().add(poly);
             }
-            polygon.setTranslateX(entity.getX());
-            polygon.setTranslateY(entity.getY());
-            polygon.setRotate(entity.getRotation());
-
-            if (entity.getColor() == null) {
-                entity.setColor("BLACK");
-            }
-            polygon.setFill(Color.valueOf(entity.getColor()));
+            poly.setTranslateX(e.getX());
+            poly.setTranslateY(e.getY());
+            poly.setRotate(e.getRotation());
+            if (e.getColor() == null) e.setColor("BLACK");
+            poly.setFill(Color.valueOf(e.getColor()));
         }
+    }
 
+    private void checkScoreUpdate() {
+        long currentScore = ScoreClient.getScore();
+        if (currentScore != lastScore) {
+            scoreText.setText("Score: " + currentScore);
+            lastScore = currentScore;
+        }
     }
 
     private Collection<? extends IGamePluginService> getPluginServices() {

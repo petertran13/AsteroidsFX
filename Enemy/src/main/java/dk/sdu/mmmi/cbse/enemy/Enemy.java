@@ -21,13 +21,13 @@ public class Enemy extends Entity {
         String otherType = other.getType();
 
         if ("PLAYER".equals(otherType)) {
-            // Remove both enemy and player immediately
+
             world.removeEntity(this);
             world.removeEntity(other);
         }
 
         if ("ASTEROID".equals(otherType)) {
-            // Your existing logic for asteroid collisions
+
             decreaseHealth(1);
             if (health <= 0) {
                 world.removeEntity(this);

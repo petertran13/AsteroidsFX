@@ -21,7 +21,6 @@ public class Player extends Entity {
         String otherType = other.getType();
 
         if ("ENEMY".equals(otherType)) {
-            // Remove both player and enemy immediately
             world.removeEntity(this);
             world.removeEntity(other);
         }

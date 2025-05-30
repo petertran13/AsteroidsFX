@@ -23,9 +23,8 @@ public class AsteroidControlSystem implements IEntityProcessingService {
         int currentCount = world.getEntities(Asteroid.class).size();
 
         for (int i = currentCount; i < MIN_ASTEROIDS; i++) {
-            Entity newAsteroid = createAsteroid(gameData, random, 3); // always size 3 (big)
+            Entity newAsteroid = createAsteroid(gameData, random, 3);
             world.addEntity(newAsteroid);
-            System.out.println("[AsteroidControlSystem] Spawned new big asteroid to maintain minimum count");
         }
     }
 
@@ -37,7 +36,6 @@ public class AsteroidControlSystem implements IEntityProcessingService {
         asteroid.setX(asteroid.getX() + dx);
         asteroid.setY(asteroid.getY() + dy);
 
-        // Wrap screen edges
         if (asteroid.getX() < 0) asteroid.setX(gameData.getDisplayWidth());
         else if (asteroid.getX() > gameData.getDisplayWidth()) asteroid.setX(0);
 

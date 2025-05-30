@@ -34,7 +34,6 @@ public class Asteroid extends Entity {
             world.removeEntity(other);
 
             if (size > 1) {
-                // Split into two smaller asteroids
                 for (int i = 0; i < 2; i++) {
                     Asteroid smaller = new Asteroid(size - 1);
                     smaller.setX(this.getX() + (i == 0 ? -15 : 15));
@@ -58,16 +57,11 @@ public class Asteroid extends Entity {
                 }
                 world.removeEntity(this);
             } else {
-                // Smallest asteroid destroyed: remove it and send points
                 world.removeEntity(this);
-
-                ScoreClient scoreClient = new ScoreClient();
-                scoreClient.sendPoints(50);
+                ScoreClient.sendPoints(50);
             }
-        }
 
-        else if ("ENEMY_BULLET".equals(otherType)) {
-            // You can add handling for enemy bullets here if needed
+        } else if ("ENEMY_BULLET".equals(otherType)) {
             world.removeEntity(other);
             world.removeEntity(this);
         }

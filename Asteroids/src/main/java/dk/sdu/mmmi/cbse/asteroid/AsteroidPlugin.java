@@ -28,15 +28,15 @@ public class AsteroidPlugin implements IGamePluginService {
     }
 
     private Entity createAsteroid(GameData gameData, Random random) {
-        int size = random.nextInt(3) + 1; // 1, 2, or 3
+        int size = random.nextInt(3) + 1;
         Asteroid asteroid = new Asteroid(size);
 
-        double scale = size / 3.0; // 1.0, 0.66, 0.33 for sizes 3, 2, 1
+        double scale = size / 3.0;
 
         asteroid.setPolygonCoordinates(getBaseShapeScaled(scale));
         asteroid.setX(random.nextInt(gameData.getDisplayWidth()));
         asteroid.setY(random.nextInt(gameData.getDisplayHeight()));
-        asteroid.setRadius((float)(60 * scale));  // Bigger base radius
+        asteroid.setRadius((float)(60 * scale));
         asteroid.setRotation(random.nextInt(360));
         asteroid.setColor("GRAY");
 
