@@ -21,7 +21,6 @@ public class EnemyControlSystem implements IEntityProcessingService {
 
     @Override
     public void process(GameData gameData, World world) {
-        // Keep at least 2 enemies alive
         int enemyCount = world.getEntities(Enemy.class).size();
         while (enemyCount < 2) {
             Entity newEnemy = createEnemy(gameData);

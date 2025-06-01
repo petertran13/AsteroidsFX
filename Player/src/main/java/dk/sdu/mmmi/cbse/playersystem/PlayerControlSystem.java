@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 public class PlayerControlSystem implements IEntityProcessingService {
 
     private static final double MOVE_SPEED = 1.5;
-    private static final double BOOST_MULTIPLIER = 2.0;
     private static final int ROTATION_SPEED = 2;
 
     @Override
@@ -26,7 +25,6 @@ public class PlayerControlSystem implements IEntityProcessingService {
 
             rotatePlayer(player, keys);
             movePlayer(player, keys);
-            applyBoost(player, keys);
             handleShooting(player, keys, gameData, world);
             keepPlayerOnScreen(player, gameData);
         }
@@ -62,19 +60,6 @@ public class PlayerControlSystem implements IEntityProcessingService {
         }
     }
 
-    private void applyBoost(Entity player, GameKeys keys) {
-        if (keys.isDown(GameKeys.X)) {
-            double angle = Math.toRadians(player.getRotation());
-            double dx = Math.cos(angle) * BOOST_MULTIPLIER;
-            double dy = Math.sin(angle) * BOOST_MULTIPLIER;
-
-            player.setX(player.getX() + dx);
-            player.setY(player.getY() + dy);
-
-            player.setPolygonCoordinates(-7, -7, 13, -2, -7, 7);
-            player.setColor("PURPLE");
-        }
-    }
 
     private void handleShooting(Entity player, GameKeys keys, GameData gameData, World world) {
         if (keys.isPressed(GameKeys.SPACE)) {

@@ -51,7 +51,7 @@ public class AsteroidControlSystem implements IEntityProcessingService {
         asteroid.setPolygonCoordinates(getBaseShapeScaled(scale));
         asteroid.setX(random.nextInt(gameData.getDisplayWidth()));
         asteroid.setY(random.nextInt(gameData.getDisplayHeight()));
-        asteroid.setRadius((float)(60 * scale));  // Bigger base radius
+        asteroid.setRadius((float)(60 * scale));
         asteroid.setRotation(random.nextInt(360));
         asteroid.setColor("GRAY");
 
